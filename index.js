@@ -9,12 +9,11 @@ var seconds_in_cache_14 = 60 * 14
 var seconds_in_cache_10 = 60 * 10
 var seconds_in_cache_5 = 60 * 5
 var redis = require('redis');
-var client = redis.createClient();
 var max_gap = 15
 var debugbrp = require('debug')('brp')
 var debugaddress = require('debug')('brp:address')
 var randomstring = require('randomstring')
-
+var client;
 // var env = process.env.NODE_ENV || 'development';
 // var config = require('./config')[env];
 // require('./config/mongoose')(config);
@@ -102,14 +101,16 @@ var generate_key = function() {
   });
 }
 
-function Gateway(xpub, exchange_key) {
+function Gateway(xpub, redisOptions) {
   var self = this
   this.ies = {}
-  if (!(self instanceof Gateway)) return new Gateway(xpub, exchange_key)
+  if (!(self instanceof Gateway)) return new Gateway(xpub, redisOptions)
   this.xpub = xpub
   this.unused_addresses = []
   this.addresses_count = 0
   this.events = new EventEmitter()
+
+  client = redis.createClient(redisOptions ? redisOptions : {});
 
   this.retrieved = new HDPublicKey(this.xpub)
   var bitcoin = new BLT()
